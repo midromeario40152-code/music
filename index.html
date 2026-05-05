@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Musicianer - Liruos Ecosystem</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
@@ -22,25 +21,9 @@
             overflow: hidden;
         }
 
-        /* Login Overlay */
-        #auth-overlay {
-            position: fixed;
-            inset: 0;
-            background: white;
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .auth-card {
-            max-width: 420px;
-            width: 90%;
-            text-align: center;
-            padding: 40px;
-            background: white;
-            border-radius: 40px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+        .verified-badge {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
         }
 
         .nav-item {
@@ -73,9 +56,45 @@
             transition: width 0.5s ease;
         }
 
+        .liruos-card {
+            background: white;
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            border: 1px solid #f1f5f9;
+        }
+
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         
+        .search-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+        }
+        .search-container i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+        }
+        .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            font-size: 0.875rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Video Card Styles */
         .video-card {
             background: white;
             border-radius: 20px;
@@ -92,31 +111,44 @@
             background: #000;
             position: relative;
             cursor: pointer;
+            overflow: hidden;
         }
         .video-thumb img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            transition: transform 0.5s;
+        }
+        .video-thumb:hover img {
+            transform: scale(1.05);
+        }
+        .play-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.3);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .video-thumb:hover .play-overlay {
+            opacity: 1;
         }
         .play-icon {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 50px;
-            height: 50px;
+            width: 56px;
+            height: 56px;
             background: white;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #3b82f6;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-            opacity: 0;
-            transition: 0.3s;
+            font-size: 1.2rem;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
         }
-        .video-card:hover .play-icon { opacity: 1; }
 
+        /* Stronger Video Player Modal */
         #video-modal {
             position: fixed;
             inset: 0;
@@ -126,6 +158,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            backdrop-blur: 10px;
         }
         .modal-content {
             width: 95%;
@@ -134,40 +167,17 @@
             background: #000;
             border-radius: 24px;
             overflow: hidden;
+            box-shadow: 0 0 100px rgba(59, 130, 246, 0.4);
+            position: relative;
         }
-        iframe { width: 100%; height: 100%; border: none; }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
     </style>
 </head>
 <body class="h-screen flex flex-col">
-
-    <!-- Google Login Overlay -->
-    <div id="auth-overlay">
-        <div class="auth-card">
-            <div class="bg-blue-600 w-20 h-20 rounded-3xl flex items-center justify-center shadow-xl mx-auto mb-8">
-                <i class="fas fa-bolt text-white text-3xl"></i>
-            </div>
-            <h1 class="text-3xl font-black text-slate-900 mb-2">Musicianer</h1>
-            <p class="text-slate-400 font-bold text-xs uppercase tracking-widest mb-10">Liruos Ecosystem • Next Gen Player</p>
-            
-            <div class="space-y-4">
-                <div id="g_id_onload"
-                     data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
-                     data-callback="handleCredentialResponse"
-                     data-auto_prompt="false">
-                </div>
-                <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="signin_with" data-shape="pill" data-logo_alignment="left"></div>
-                
-                <!-- Mock Login for Preview -->
-                <button onclick="mockLogin()" class="w-full py-4 px-6 border border-slate-200 rounded-full font-bold text-slate-600 hover:bg-slate-50 transition flex items-center justify-center gap-3 mt-4">
-                    <i class="fab fa-google text-red-500"></i> Tiếp tục với tư cách Khách
-                </button>
-            </div>
-            
-            <p class="mt-12 text-[10px] text-slate-400 font-bold uppercase leading-relaxed">
-                Bằng cách đăng nhập, bạn đồng ý với điều khoản sử dụng<br>thuộc hệ sinh thái Liruos v2.5
-            </p>
-        </div>
-    </div>
 
     <!-- Header -->
     <header class="p-4 flex justify-between items-center bg-white border-b border-slate-100 z-50">
@@ -176,15 +186,17 @@
                 <i class="fas fa-bolt text-white"></i>
             </div>
             <div>
-                <h1 class="text-xl font-extrabold tracking-tight">Musicianer</h1>
-                <span class="text-[9px] font-bold text-blue-500 uppercase">Liruos Ecosystem v2.5</span>
+                <h1 class="text-xl font-extrabold tracking-tight leading-none">Musicianer</h1>
+                <span class="text-[9px] font-bold text-blue-500 uppercase tracking-tighter">Liruos Ecosystem v2.5</span>
             </div>
         </div>
         <div class="flex items-center gap-4">
-            <div id="status-tag" class="bg-blue-600 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase">Verified</div>
-            <div class="flex items-center gap-3 bg-slate-50 px-3 py-1.5 rounded-full">
+            <div id="status-tag" class="hidden verified-badge px-3 py-1 rounded-full text-[10px] font-bold uppercase shadow-sm">Verified</div>
+            <div class="flex items-center gap-3 cursor-pointer bg-slate-50 hover:bg-slate-100 px-3 py-1.5 rounded-full transition" onclick="showSection('account')">
                 <span id="user-display-name" class="text-sm font-bold">Khách</span>
-                <img id="user-avatar" src="https://ui-avatars.com/api/?name=User&background=3b82f6&color=fff" class="w-8 h-8 rounded-full border-2 border-white shadow-sm">
+                <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs">
+                    <i class="fas fa-user"></i>
+                </div>
             </div>
         </div>
     </header>
@@ -198,16 +210,20 @@
             
             <div class="h-px bg-slate-100 my-4"></div>
             
-            <div class="px-2">
+            <p class="text-[10px] font-bold text-slate-400 uppercase px-4 mb-2">Công cụ</p>
+            <div onclick="showSection('groups')" id="nav-groups" class="nav-item"><i class="fas fa-folder-plus"></i> <span class="hidden md:block">Quản lý nhóm</span></div>
+            
+            <div class="px-2 mt-4">
                 <label class="nav-item text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200">
                     <i class="fas fa-upload"></i> <span class="hidden md:block">Tải nhạc lên</span>
                     <input type="file" id="file-upload" class="hidden" accept="audio/*" multiple>
                 </label>
             </div>
 
+            <!-- Storage Info -->
             <div class="mt-auto p-4 bg-blue-50/50 rounded-2xl border border-blue-100 hidden md:block">
                 <div class="flex justify-between items-center mb-2">
-                    <span class="text-[10px] font-black text-blue-600 uppercase tracking-tighter">Hạn mức Cloud</span>
+                    <span class="text-[10px] font-black text-blue-600 uppercase">Cloud Storage</span>
                     <span id="storage-percent" class="text-[10px] font-black text-blue-600">0%</span>
                 </div>
                 <div class="storage-bar">
@@ -219,138 +235,201 @@
 
         <!-- Main Content -->
         <section id="content-display" class="flex-1 overflow-y-auto p-6 custom-scrollbar pb-32">
+            
             <div id="home-section" class="section-content">
-                <div class="mb-8">
-                    <h2 class="text-3xl font-black text-slate-900">Khám phá thịnh hành</h2>
-                    <p class="text-slate-400 font-bold text-xs uppercase tracking-widest mt-1">Đã xác thực tài khoản Google • Sẵn sàng phát Video</p>
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 class="text-3xl font-black text-slate-900">Khám phá thịnh hành</h2>
+                        <p class="text-slate-400 font-bold text-xs uppercase tracking-widest mt-1">9 Video siêu mạnh mỗi ngày • Chuẩn HD 1080p</p>
+                    </div>
                 </div>
+
                 <div id="video-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
             </div>
 
             <div id="library-section" class="section-content hidden">
-                <div class="flex justify-between items-center mb-8">
-                    <h2 class="text-3xl font-black">Thư viện 30GB</h2>
+                <div class="flex flex-col md:flex-row justify-between items-center gap-6 mb-8">
+                    <h2 class="text-3xl font-black">Thư viện của bạn</h2>
+                    <div class="search-container shadow-sm">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="search-input" placeholder="Tìm kiếm trong 30GB nhạc..." class="search-input">
+                    </div>
                 </div>
                 <div id="local-list" class="grid gap-4"></div>
             </div>
+
+            <div id="liruos-section" class="section-content hidden">
+                <div class="flex justify-between items-center mb-10">
+                    <h2 class="text-3xl font-black">Cộng đồng Liruos</h2>
+                    <button onclick="postToCommunity()" class="bg-slate-900 text-white px-6 py-3 rounded-2xl text-sm font-bold shadow-xl hover:bg-black transition">Chia sẻ bài đang nghe</button>
+                </div>
+                <div id="community-feed" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+            </div>
+
+            <div id="register-section" class="section-content hidden">
+                <div class="max-w-2xl mx-auto bg-white p-12 rounded-[48px] shadow-2xl border border-slate-100">
+                    <div class="text-center mb-10">
+                        <div class="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center text-blue-600 text-3xl mx-auto mb-6">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <h2 class="text-4xl font-black mb-3">Đăng ký định danh</h2>
+                        <p class="text-slate-400 font-medium">Hoàn toàn miễn phí. Bảo mật bởi Liruos Ecosystem.</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+                        <input type="text" id="p-fullname" class="w-full p-5 bg-slate-50 rounded-3xl outline-none border border-slate-100 font-bold" placeholder="Họ và tên">
+                        <input type="tel" id="p-phone" class="w-full p-5 bg-slate-50 rounded-3xl outline-none border border-slate-100 font-bold" placeholder="Số điện thoại">
+                        <input type="email" id="p-email" class="w-full p-5 bg-slate-50 rounded-3xl outline-none border border-slate-100 font-bold" placeholder="Gmail cá nhân">
+                        <input type="text" id="p-custom-id" class="w-full p-5 bg-slate-50 rounded-3xl outline-none border border-slate-100 font-bold" placeholder="ID định danh">
+                    </div>
+                    
+                    <button onclick="submitRegistration()" class="w-full py-5 bg-blue-600 text-white rounded-3xl font-black shadow-2xl hover:scale-[1.02] transition">KÍCH HOẠT QUYỀN LỢI 30GB</button>
+                </div>
+            </div>
+
+            <div id="account-section" class="section-content hidden">
+                <div id="account-container" class="max-w-xl mx-auto"></div>
+            </div>
+
+            <div id="groups-section" class="section-content hidden">
+                <div class="max-w-2xl mx-auto text-center py-24">
+                    <div class="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center text-blue-200 text-4xl mx-auto mb-8">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <h2 class="text-4xl font-black mb-4">Sắp xếp kho nhạc</h2>
+                    <p class="text-slate-500 font-medium mb-12">Tính năng quản lý theo nhóm nhạc.</p>
+                    <button onclick="showToast('Đang khởi tạo...')" class="px-8 py-4 bg-blue-600 text-white rounded-3xl font-black">Tạo nhóm mới</button>
+                </div>
+            </div>
+
         </section>
     </main>
 
-    <!-- Video Player -->
+    <!-- TRÌNH PHÁT VIDEO SIÊU MẠNH (KHẮC PHỤC LỖI 153) -->
     <div id="video-modal">
         <button onclick="closeVideo()" class="absolute top-6 right-6 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full text-white text-xl flex items-center justify-center">
             <i class="fas fa-times"></i>
         </button>
         <div class="modal-content">
-            <iframe id="video-iframe" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            <iframe id="video-iframe" 
+                    src="" 
+                    allow="autoplay; encrypted-media; picture-in-picture; clipboard-write" 
+                    allowfullscreen></iframe>
         </div>
-        <div class="mt-8 text-center text-white">
-            <h3 id="modal-video-title" class="text-2xl font-black">Đang phát</h3>
-            <p class="text-blue-400 font-bold text-xs uppercase mt-2">Liruos Stream Protocol</p>
+        <div class="mt-8 text-center">
+            <h3 id="modal-video-title" class="text-white text-2xl font-black mb-2">Đang phát</h3>
+            <p class="text-blue-400 font-bold text-xs uppercase tracking-widest">Liruos Video Stream • HD Quality</p>
         </div>
     </div>
 
-    <!-- Footer Player -->
+    <!-- PLAYER FOOTER -->
     <footer class="h-28 bg-white border-t border-slate-100 px-10 flex items-center justify-between z-[100] shadow-2xl">
         <div class="flex items-center gap-5 w-1/4">
-            <div class="w-14 h-14 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-xl">
+            <div class="w-14 h-14 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-xl relative group">
                 <i class="fas fa-compact-disc fa-spin text-xl text-blue-400"></i>
+                <div id="lossless-indicator" class="hidden absolute -top-2 -right-2 bg-blue-500 text-[7px] font-black px-2 py-1 rounded-full text-white border-2 border-white shadow-lg">HI-RES</div>
             </div>
-            <div class="truncate">
+            <div class="hidden lg:block truncate max-w-[200px]">
                 <h4 id="np-title" class="font-black text-slate-800 truncate">Sẵn sàng</h4>
-                <p class="text-[10px] text-slate-400 font-bold uppercase">Musicianer Player</p>
+                <p class="text-[10px] text-slate-400 font-black uppercase">Liruos Player</p>
             </div>
         </div>
 
         <div class="flex flex-col items-center gap-3 flex-1 max-w-xl">
             <div class="flex items-center gap-8">
-                <button onclick="prevTrack()" class="text-slate-300 hover:text-blue-600"><i class="fas fa-step-backward"></i></button>
-                <button onclick="togglePlay()" id="play-btn" class="w-14 h-14 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition">
+                <button onclick="prevTrack()" class="text-slate-300 hover:text-blue-600 text-lg transition"><i class="fas fa-step-backward"></i></button>
+                <button onclick="togglePlay()" id="play-btn" class="w-14 h-14 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition">
                     <i class="fas fa-play ml-1"></i>
                 </button>
-                <button onclick="nextTrack()" class="text-slate-300 hover:text-blue-600"><i class="fas fa-step-forward"></i></button>
+                <button onclick="nextTrack()" class="text-slate-300 hover:text-blue-600 text-lg transition"><i class="fas fa-step-forward"></i></button>
             </div>
             <div class="w-full flex items-center gap-4">
-                <span id="cur-time" class="text-[10px] font-black text-slate-400">0:00</span>
-                <div class="flex-1 h-1.5 bg-slate-100 rounded-full relative">
+                <span id="cur-time" class="text-[10px] font-black text-slate-400 w-10 text-right">0:00</span>
+                <div id="p-bar-container" class="flex-1 h-1.5 bg-slate-100 rounded-full cursor-pointer relative" onclick="seek(event)">
                     <div id="p-bar" class="absolute inset-y-0 left-0 bg-blue-600 w-0"></div>
                 </div>
-                <span id="dur-time" class="text-[10px] font-black text-slate-400">0:00</span>
+                <span id="dur-time" class="text-[10px] font-black text-slate-400 w-10">0:00</span>
             </div>
         </div>
 
-        <div class="w-1/4 flex justify-end">
-            <input type="range" id="vol-slider" class="w-24 accent-blue-600" min="0" max="1" step="0.01" value="1">
+        <div class="flex items-center justify-end gap-8 w-1/4">
+            <button id="lossless-btn" onclick="toggleLossless()" class="flex flex-col items-center gap-1 text-slate-200 hover:text-blue-500">
+                <i class="fas fa-bolt text-xl"></i>
+                <span class="text-[8px] font-black uppercase">Lossless</span>
+            </button>
+            <input type="range" id="vol-slider" class="w-24 h-1 accent-blue-600 appearance-none bg-slate-100 rounded-full" min="0" max="1" step="0.01" value="1">
         </div>
     </footer>
 
-    <div id="toast" class="fixed bottom-32 left-1/2 -translate-x-1/2 px-8 py-4 bg-slate-900 text-white rounded-3xl text-sm font-black opacity-0 transition-all z-[300]"></div>
+    <div id="toast" class="fixed bottom-32 left-1/2 -translate-x-1/2 px-8 py-4 bg-slate-900 text-white rounded-3xl text-sm font-black opacity-0 pointer-events-none transition-all duration-500 z-[300] shadow-2xl"></div>
 
     <script>
         const MAX_STORAGE = 30 * 1024 * 1024 * 1024;
+
         let state = {
+            isRegistered: false,
+            losslessActive: false,
             user: null,
             playlist: [],
             totalBytes: 0,
             isPlaying: false,
             currentIndex: -1,
+            searchTerm: "",
             discoveryVideos: [
                 { id: "eX7p7k_j0dE", title: "Kẻ Ăn Hồn - Full Trailer", type: "Phim Rạp", thumb: "https://img.youtube.com/vi/eX7p7k_j0dE/maxresdefault.jpg" },
                 { id: "kJQP7kiw5Fk", title: "Despacito - Official MV", type: "Âm Nhạc", thumb: "https://img.youtube.com/vi/kJQP7kiw5Fk/maxresdefault.jpg" },
                 { id: "MvL6CjE9iRE", title: "Top Music 2026 Chill", type: "Collection", thumb: "https://img.youtube.com/vi/MvL6CjE9iRE/maxresdefault.jpg" },
                 { id: "jI1j6-D-y3M", title: "Sơn Tùng M-TP | Chạy Ngay Đi", type: "Âm Nhạc", thumb: "https://img.youtube.com/vi/jI1j6-D-y3M/maxresdefault.jpg" },
                 { id: "v2-9r_vdfZg", title: "Hành Động Viễn Tưởng", type: "Trailer", thumb: "https://img.youtube.com/vi/v2-9r_vdfZg/maxresdefault.jpg" },
-                { id: "JGwWNGJdvx8", title: "Shape of You", type: "Âm Nhạc", thumb: "https://img.youtube.com/vi/JGwWNGJdvx8/maxresdefault.jpg" }
+                { id: "JGwWNGJdvx8", title: "Shape of You", type: "Âm Nhạc", thumb: "https://img.youtube.com/vi/JGwWNGJdvx8/maxresdefault.jpg" },
+                { id: "09R8_2nJtjg", title: "Lo-fi Hip Hop Radio", type: "Âm Nhạc", thumb: "https://img.youtube.com/vi/09R8_2nJtjg/maxresdefault.jpg" },
+                { id: "XqZsoesa55w", title: "Top Phim Lẻ Hay Nhất", type: "Phim Lẻ", thumb: "https://img.youtube.com/vi/XqZsoesa55w/maxresdefault.jpg" },
+                { id: "qMtcWqzSK5M", title: "BLACKPINK - Kill This Love", type: "Âm Nhạc", thumb: "https://img.youtube.com/vi/qMtcWqzSK5M/maxresdefault.jpg" }
+            ],
+            communityPosts: [
+                { id: 1, user: "Admin", track: "Hệ thống video đã được sửa lỗi 153!", likes: 1050 }
             ]
         };
 
         const audio = new Audio();
 
-        // XỬ LÝ ĐĂNG NHẬP GOOGLE
-        function handleCredentialResponse(response) {
-            // Giải mã JWT (Token của Google) để lấy thông tin
-            const base64Url = response.credential.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-
-            const profile = JSON.parse(jsonPayload);
-            loginSuccess(profile.name, profile.picture);
-        }
-
-        function mockLogin() {
-            loginSuccess("Liruos Guest", "https://ui-avatars.com/api/?name=Liruos+Guest&background=3b82f6&color=fff");
-        }
-
-        function loginSuccess(name, picture) {
-            state.user = { name, picture };
-            document.getElementById('auth-overlay').style.display = 'none';
-            document.getElementById('user-display-name').innerText = name;
-            document.getElementById('user-avatar').src = picture;
-            
+        window.onload = () => {
             renderDiscovery();
+            renderCommunity();
             updateStorageUI();
-            showToast(`Chào mừng ${name} đến với Musicianer!`);
-        }
+            
+            document.getElementById('file-upload').onchange = handleUpload;
+            document.getElementById('search-input').oninput = (e) => {
+                state.searchTerm = e.target.value.toLowerCase();
+                updateLibraryUI();
+            };
 
-        // PHÁT VIDEO
+            audio.ontimeupdate = updateProgress;
+            audio.onended = nextTrack;
+            document.getElementById('vol-slider').oninput = e => audio.volume = e.target.value;
+        };
+
+        // FIX LỖI 153 / 150: SỬ DỤNG PRIVACY-ENHANCED & ORIGIN
         window.openVideo = (vid, title) => {
             const modal = document.getElementById('video-modal');
             const iframe = document.getElementById('video-iframe');
-            const origin = window.location.origin;
+            const titleDisplay = document.getElementById('modal-video-title');
             
-            // Video YouTube sẽ chạy mượt hơn khi có xác thực đăng nhập (môi trường thực tế)
-            iframe.src = `https://www.youtube-nocookie.com/embed/${vid}?autoplay=1&origin=${origin}&enablejsapi=1`;
-            document.getElementById('modal-video-title').innerText = title;
+            // Dùng youtube-nocookie.com và thêm origin để tránh bị chặn nhúng
+            const origin = window.location.origin;
+            iframe.src = `https://www.youtube-nocookie.com/embed/${vid}?autoplay=1&vq=hd1080&rel=0&enablejsapi=1&origin=${origin}`;
+            
+            titleDisplay.innerText = title;
             modal.style.display = 'flex';
             
-            if(state.isPlaying) togglePlay();
+            if(state.isPlaying) togglePlay(); 
         };
 
         window.closeVideo = () => {
-            document.getElementById('video-modal').style.display = 'none';
-            document.getElementById('video-iframe').src = "";
+            const modal = document.getElementById('video-modal');
+            const iframe = document.getElementById('video-iframe');
+            iframe.src = "";
+            modal.style.display = 'none';
         };
 
         function renderDiscovery() {
@@ -358,42 +437,152 @@
             grid.innerHTML = state.discoveryVideos.map(v => `
                 <div class="video-card">
                     <div class="video-thumb" onclick="openVideo('${v.id}', '${v.title}')">
-                        <img src="${v.thumb}">
-                        <div class="play-icon"><i class="fas fa-play"></i></div>
+                        <img src="${v.thumb}" alt="${v.title}">
+                        <div class="play-overlay">
+                            <div class="play-icon"><i class="fas fa-play"></i></div>
+                        </div>
                     </div>
                     <div class="p-5">
                         <span class="text-[9px] font-black text-blue-500 uppercase tracking-widest">${v.type}</span>
-                        <h3 class="font-bold text-slate-800 line-clamp-1 mt-1">${v.title}</h3>
+                        <h3 class="font-bold text-slate-800 line-clamp-1 leading-tight mt-1">${v.title}</h3>
                     </div>
                 </div>
             `).join('');
         }
 
-        // CÁC TÍNH NĂNG KHÁC (AUDIO)
-        document.getElementById('file-upload').onchange = (e) => {
+        window.submitRegistration = () => {
+            const fullname = document.getElementById('p-fullname').value;
+            const phone = document.getElementById('p-phone').value;
+            const email = document.getElementById('p-email').value;
+            const customId = document.getElementById('p-custom-id').value;
+
+            if (!fullname || !phone || !email || !customId) {
+                showToast("Vui lòng nhập đầy đủ thông tin!");
+                return;
+            }
+
+            state.isRegistered = true;
+            state.user = { fullname, phone, email, customId };
+            
+            document.getElementById('status-tag').classList.remove('hidden');
+            document.getElementById('user-display-name').innerText = state.user.customId;
+            
+            updateAccountUI();
+            showSection('account');
+            showToast("Kích hoạt 30GB thành công!");
+        };
+
+        function updateAccountUI() {
+            document.getElementById('account-container').innerHTML = `
+                <div class="bg-white p-12 rounded-[48px] shadow-sm text-center">
+                    <div class="w-24 h-24 bg-blue-600 rounded-[32px] mx-auto flex items-center justify-center text-white text-3xl mb-8">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <h2 class="text-3xl font-black mb-1">${state.user.fullname}</h2>
+                    <p class="text-blue-600 font-bold mb-10">@${state.user.customId}</p>
+                    
+                    <div class="grid grid-cols-2 gap-4 text-left pt-6 border-t border-slate-100">
+                        <div class="p-4 bg-slate-50 rounded-2xl">
+                            <p class="text-[10px] text-slate-400 font-black uppercase">Phone</p>
+                            <p class="text-sm font-bold">${state.user.phone}</p>
+                        </div>
+                        <div class="p-4 bg-slate-50 rounded-2xl">
+                            <p class="text-[10px] text-slate-400 font-black uppercase">Gmail</p>
+                            <p class="text-sm font-bold">${state.user.email}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function handleUpload(e) {
             const files = Array.from(e.target.files);
             files.forEach(f => {
                 if (state.totalBytes + f.size <= MAX_STORAGE) {
-                    state.playlist.push({ id: Math.random(), title: f.name, url: URL.createObjectURL(f), size: f.size });
+                    state.playlist.push({
+                        id: Math.random().toString(36).substr(2, 9),
+                        title: f.name.replace(/\.[^/.]+$/, ""),
+                        url: URL.createObjectURL(f),
+                        size: f.size
+                    });
                     state.totalBytes += f.size;
                 }
             });
             updateStorageUI();
             updateLibraryUI();
-        };
+            showToast("Đã tải bài hát lên kho 30GB!");
+        }
 
         function updateStorageUI() {
             const p = ((state.totalBytes / MAX_STORAGE) * 100).toFixed(2);
             document.getElementById('storage-fill').style.width = `${p}%`;
             document.getElementById('storage-percent').innerText = `${p}%`;
-            document.getElementById('storage-text').innerText = `${(state.totalBytes/(1024*1024)).toFixed(0)} MB / 30,000 MB`;
+            document.getElementById('storage-text').innerText = `${formatBytes(state.totalBytes)} / 30,000 MB`;
         }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024, sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        window.playTrack = (id) => {
+            const idx = state.playlist.findIndex(t => t.id === id);
+            if (idx === -1) return;
+            state.currentIndex = idx;
+            audio.src = state.playlist[idx].url;
+            audio.play();
+            state.isPlaying = true;
+            document.getElementById('np-title').innerText = state.playlist[idx].title;
+            updatePlayerUI();
+            updateLibraryUI();
+        };
 
         window.togglePlay = () => {
             if (state.currentIndex === -1) return;
             state.isPlaying ? audio.pause() : audio.play();
             state.isPlaying = !state.isPlaying;
+            updatePlayerUI();
+        };
+
+        function updatePlayerUI() {
             document.getElementById('play-btn').innerHTML = state.isPlaying ? '<i class="fas fa-pause"></i>' : '<i class="fas fa-play ml-1"></i>';
+        }
+
+        function updateProgress() {
+            if (!audio.duration) return;
+            const p = (audio.currentTime / audio.duration) * 100;
+            document.getElementById('p-bar').style.width = `${p}%`;
+            document.getElementById('cur-time').innerText = formatTime(audio.currentTime);
+            document.getElementById('dur-time').innerText = formatTime(audio.duration);
+        }
+
+        function formatTime(s) {
+            const m = Math.floor(s / 60);
+            const r = Math.floor(s % 60);
+            return `${m}:${r < 10 ? '0' : ''}${r}`;
+        }
+
+        window.nextTrack = () => state.playlist.length && playTrack(state.playlist[(state.currentIndex + 1) % state.playlist.length].id);
+        window.prevTrack = () => {
+            let idx = state.currentIndex - 1;
+            if (idx < 0) idx = state.playlist.length - 1;
+            playTrack(state.playlist[idx].id);
+        };
+
+        window.seek = (e) => {
+            const container = document.getElementById('p-bar-container');
+            const rect = container.getBoundingClientRect();
+            const pos = (e.clientX - rect.left) / rect.width;
+            audio.currentTime = pos * audio.duration;
+        };
+
+        window.toggleLossless = () => {
+            state.losslessActive = !state.losslessActive;
+            document.getElementById('lossless-btn').classList.toggle('text-blue-500', state.losslessActive);
+            document.getElementById('lossless-indicator').classList.toggle('hidden', !state.losslessActive);
+            showToast(state.losslessActive ? "Lossless Audio ON" : "Lossless Audio OFF");
         };
 
         window.showSection = (id) => {
@@ -403,18 +592,56 @@
             document.getElementById(`nav-${id}`).classList.add('active');
         };
 
-        function showToast(m) {
-            const t = document.getElementById('toast');
-            t.innerText = m; t.classList.add('opacity-100');
-            setTimeout(() => t.classList.remove('opacity-100'), 3000);
+        function updateLibraryUI() {
+            const list = document.getElementById('local-list');
+            const filtered = state.playlist.filter(t => t.title.toLowerCase().includes(state.searchTerm));
+            list.innerHTML = filtered.map((t) => {
+                const isCurrent = state.currentIndex !== -1 && state.playlist[state.currentIndex].id === t.id;
+                return `
+                <div class="flex items-center justify-between p-5 bg-white rounded-3xl border ${isCurrent ? 'border-blue-500' : 'border-slate-50'} cursor-pointer" onclick="playTrack('${t.id}')">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-2xl flex items-center justify-center ${isCurrent ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'}">
+                            <i class="fas ${isCurrent && state.isPlaying ? 'fa-pause' : 'fa-play text-[10px]'}"></i>
+                        </div>
+                        <div>
+                            <span class="text-sm font-bold">${t.title}</span>
+                            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">${formatBytes(t.size)}</p>
+                        </div>
+                    </div>
+                </div>
+            `}).join('');
         }
 
-        audio.ontimeupdate = () => {
-            if (!audio.duration) return;
-            document.getElementById('p-bar').style.width = `${(audio.currentTime/audio.duration)*100}%`;
-            document.getElementById('cur-time').innerText = Math.floor(audio.currentTime/60) + ":" + String(Math.floor(audio.currentTime%60)).padStart(2,'0');
-            document.getElementById('dur-time').innerText = Math.floor(audio.duration/60) + ":" + String(Math.floor(audio.duration%60)).padStart(2,'0');
+        window.postToCommunity = () => {
+            if (!state.user) return showToast("Vui lòng đăng ký!");
+            if (state.currentIndex === -1) return showToast("Chọn nhạc để chia sẻ!");
+            state.communityPosts.unshift({ id: Date.now(), user: state.user.customId, track: state.playlist[state.currentIndex].title, likes: 0 });
+            renderCommunity();
+            showToast("Đã đăng lên cộng đồng!");
         };
+
+        function renderCommunity() {
+            const feed = document.getElementById('community-feed');
+            feed.innerHTML = state.communityPosts.map(p => `
+                <div class="liruos-card flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500"><i class="fas fa-user text-sm"></i></div>
+                        <div>
+                            <p class="text-xs font-black text-blue-600">@${p.user}</p>
+                            <p class="text-sm font-bold text-slate-800 line-clamp-1">${p.track}</p>
+                        </div>
+                    </div>
+                    <i class="fas fa-heart text-slate-200"></i>
+                </div>
+            `).join('');
+        }
+
+        function showToast(m) {
+            const t = document.getElementById('toast');
+            t.innerText = m;
+            t.classList.add('opacity-100', 'bottom-36');
+            setTimeout(() => t.classList.remove('opacity-100', 'bottom-36'), 3000);
+        }
     </script>
 </body>
 </html>
